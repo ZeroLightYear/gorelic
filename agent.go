@@ -26,10 +26,10 @@ const (
 
 	//DefaultAgentGuid is plugin ID in NewRelic.
 	//You should not change it unless you want to create your own plugin.
-	DefaultAgentGuid = "com.github.yvasiyarov.GoRelic"
+	DefaultAgentGuid = "com.github.lighthonor.Assassin"
 
 	//CurrentAgentVersion is plugin version
-	CurrentAgentVersion = "0.0.6"
+	CurrentAgentVersion = "0.0.1"
 
 	//DefaultAgentName in NewRelic GUI. You can change it.
 	DefaultAgentName = "Go daemon"
@@ -91,16 +91,20 @@ func (agent *Agent) WrapHTTPHandler(h http.Handler) http.Handler {
 }
 
 //Run initialize Agent instance and start harvest go routine
-func (agent *Agent) Run() error {
+func (agent *Agent) Run(merics ...newrelic_platform_go.IMetrica) error {
 	if agent.NewrelicLicense == "" {
 		return errors.New("please, pass a valid newrelic license key")
 	}
 
 	agent.plugin = newrelic_platform_go.NewNewrelicPlugin(agent.AgentVersion, agent.NewrelicLicense, agent.NewrelicPollInterval)
 	component := newrelic_platform_go.NewPluginComponent(agent.NewrelicName, agent.AgentGUID)
-	agent.plugin.AddComponent(component)
 
+	agent.plugin.AddComponent(component)
 	addRuntimeMericsToComponent(component)
+
+    for i, _ := range merics {
+        component.AddMetrica(merics[i])
+    }
 
 	agent.Tracer = newTracer(component)
 
